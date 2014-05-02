@@ -1,0 +1,34 @@
+# http://jeff.robbins.ws/reference/my-screenrc-file
+# https://bbs.archlinux.org/viewtopic.php?id=55618
+
+startup_message off
+vbell off
+defscrollback 5000
+autodetach on
+altscreen on
+
+#termcapinfo xterm*|Eterm|mlterm|rxvt 'hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007'
+#termcapinfo rxvt-unicode ti@:te@     #enable SHIFT-PGUP / SHIFT-PGDOWN scroll
+#termcapinfo wy* CS=\E[?1h:CE=\E[?1l:vi=\E[?25l:ve=\E[?25h:VR=\E[?5h:VN=\E[?5l:cb=\E[1K:CD=\E[1J
+#terminfo rxvt-unicode ti@:te@:
+#termcapinfo xterm*|rxvt-* 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+#termcapinfo xterm*|rxvt-* 'hs:ts=\E]0;:fs=\007:ds=\E]0;\007'
+#termcapinfo xterm*|rxvt-* ti@:te=\E[3J
+#termcapinfo xterm*|rxvt-* hs@:cs=\E[%i%d;%dr:im=\E[4h:ei=\E[4l
+#termcapinfo xterm*|rxvt-* hs@:cs=\E[%i%p1%d;%p2%dr:im=\E[4h:ei=\E[4l
+attrcolor b ".I"        # allow bold colors - necessary for some reason
+#term 'xterm-256color'   # 256 terminal for xterm
+term 'xterm'
+
+setenv LC_CTYPE en_US.UTF-8
+defutf8 on
+#setenv DISPLAY ':0'
+nonblock on
+
+#bind = resize =
+#bind + resize +1
+#bind - resize -1
+#bind _ resize max
+
+hardstatus alwayslastline
+hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %d/%m %{W}%c %{g}]'

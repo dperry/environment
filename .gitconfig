@@ -1,0 +1,11 @@
+[http]
+	sslVerify = true
+[push]
+	default = current
+[user]
+	name = Daniel Perry
+	email = 
+[color]
+	ui = true
+[alias]
+	lol = log --pretty=oneline --abbrev-commit --graph
