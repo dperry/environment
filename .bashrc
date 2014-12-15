@@ -7,6 +7,8 @@
 bind '"\e\e[C":forward-word'
 bind '"\e\e[D":backward-word'
 
+# Some helper functions
+
 command_exists () {
     type "$1" &> /dev/null ;
 }
@@ -45,29 +47,58 @@ unixdev () {
 	chmod -R g+w $MYPATH
 }
 
-#http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
-platform='unknown'
-unamestr=`uname`
-if [[ "$unamestr" == 'Linux' ]]; then
-	platform='linux'
-elif [[ "$unamestr" == 'FreeBSD' ]]; then
-	platform='freebsd'
-fi
+extract () {
+	if [ -f $1 ] ; then
+		case $1 in
+			*.tar.bz2)   tar xjf $1        ;;
+			*.tar.gz)    tar xzf $1     ;;
+			*.bz2)       bunzip2 $1       ;;
+			*.rar)       rar x $1     ;;
+			*.gz)        gunzip $1     ;;
+			*.tar)       tar xf $1        ;;
+			*.tbz2)      tar xjf $1      ;;
+			*.tgz)       tar xzf $1       ;;
+			*.zip)       unzip $1     ;;
+			*.Z)         uncompress $1  ;;
+			*.7z)        7z x $1    ;;
+			*)           echo "'$1' cannot be extracted via extract()" ;;
+		esac
+	else
+		echo "'$1' is not a valid file"
+	fi
+}
 
-alias rm='rm -i'
-alias cp='cp -i'
-alias mv='mv -i'
-alias df='df -h'
-alias cls='clear'
+bash_prompt_command() {
+	# How many characters of the $PWD should be kept
+	local pwdmaxlen=40
+	# Indicate that there has been dir truncation
+	local trunc_symbol=".."
+	local dir=${PWD##*/}
+	pwdmaxlen=$(( ( pwdmaxlen < ${#dir} ) ? ${#dir} : pwdmaxlen ))
+	NEW_PWD=${PWD/#$HOME/\~}
+	local pwdoffset=$(( ${#NEW_PWD} - pwdmaxlen ))
+	if [ ${pwdoffset} -gt "0" ]; then
+		NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
+		NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
+	fi
+	export NEW_PWD
+}
 
-if [[ $platform == 'linux' ]]; then
+# Seup some alias stuff
+platform=`uname`
+if [[ $platform == 'Linux' ]]; then
 	alias ls='ls -h --color=auto'
 	alias ll='ls -lh --color=auto'
 	alias la='ls -ah --color=auto'
 	alias lr='ls -rh --color=auto'
 	alias lla='ls -alh --color=auto'
 	alias lal='ls -alh --color=auto'
-elif [[ $platform == 'freebsd' ]]; then
+	# don't do this for freebsd (Mac), since we use a GUI :)
+	tty=`tty | sed -r "s:(^/dev/|/?[0-9]{1,2}$)::g"`
+	if [[ $tty == 'tty' ]]; then
+		setterm -powersave off -blank 0 2>&1 >/dev/null
+	fi
+elif [[ $platform == 'FreeBSD' ]]; then
 	alias ls='ls -hG'
 	alias ll='ls -lhG'
 	alias la='ls -ahG'
@@ -76,14 +107,11 @@ elif [[ $platform == 'freebsd' ]]; then
 	alias lal='ls -alhG'
 fi
 
-#don't do this for freebsd (Mac), since we use a GUI :)
-if [[ $platform == 'linux' ]]; then
-	tty=`tty | sed -r "s:(^/dev/|/?[0-9]{1,2}$)::g"`
-	if [[ $tty == 'tty' ]]; then
-		setterm -powersave off -blank 0 2>&1 >/dev/null
-	fi
-fi
-
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias df='df -h'
+alias cls='clear'
 alias grep='grep --color=auto'
 alias nano='nano -w'
 alias chmog='chmod'
@@ -112,7 +140,6 @@ alias yu='yum update'
 alias yug='yum upgrade'
 alias sb='sudo bash'
 
-
 # Source global definitions
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
@@ -139,6 +166,10 @@ elif [ -f /etc/debian_version ]; then
 	distro="$distro `sed -r 's/([0-9])(\.[0-9]{1,2}){1,2}/\1/' /etc/debian_version`"
 	bash_distro="\[\033[01;34m\][$distro]"
 	alias service="invoke-rc.d"
+elif [ -f /etc/arch-release ]; then
+	distro="Arch"
+	distrobasic=$distro
+	bash_distro="\[\033[01;37m\][$distro]"
 elif command_exists sw_vers ; then
 	distro="Mac OS"
 	distrobasic=$distro
@@ -152,64 +183,29 @@ else
 	promptsign="$"
 fi
 
-function bash_prompt_command() {
-	# How many characters of the $PWD should be kept
-	local pwdmaxlen=40
-	# Indicate that there has been dir truncation
-	local trunc_symbol=".."
-	local dir=${PWD##*/}
-	pwdmaxlen=$(( ( pwdmaxlen < ${#dir} ) ? ${#dir} : pwdmaxlen ))
-	NEW_PWD=${PWD/#$HOME/\~}
-	local pwdoffset=$(( ${#NEW_PWD} - pwdmaxlen ))
-	if [ ${pwdoffset} -gt "0" ]; then
-		NEW_PWD=${NEW_PWD:$pwdoffset:$pwdmaxlen}
-		NEW_PWD=${trunc_symbol}/${NEW_PWD#*/}
-	fi
-	export NEW_PWD
-}
-
+# GIT PS1 helper setup
 source ~/.git-prompt.sh
 source ~/.git-completion.bash
 GIT_PROMPT="\[\033[01;33m\]\$(__git_ps1)\[\033[00m\] "
 
-#PROMPT_COMMAND='printf "\033]0;%s@%s:%s\007" "${USER}" "${HOSTNAME}" "${PWD/#$HOME/~}"'
+# PS1 and Titlebar setup
 PROMPT_COMMAND=bash_prompt_command
 ESC='\[\ek\]\[\e\\\]'
 TITLEBAR='\[\033]0;\u@${HOSTNAME}:${NEW_PWD}$(__git_ps1)\007\]'
 PS1middle="\[\033[01;32m\]\u\[\033[01;31m\]@\[\033[01;32m\]\H\[\033[01;31m\]:\[\033[01;34m\]\w\[\033[00m\]"
-PS1="${ESC}${bash_distro} ${TITLEBAR}${PS1middle}${GIT_PROMPT}${promptsign} "
-
+PS1="${bash_distro} ${TITLEBAR}${PS1middle}${GIT_PROMPT}${promptsign} "
 export PS1
 
+# nano setup
 if command_exists nano ; then
 	export VISUAL="nano -w"
 	export EDITOR="nano -w"
 fi
 
+# screen setup
 if command_exists screen ; then
 	alias nscreen='screen -A -m -d -S'
 	alias rscreen='screen -rx'
 	alias ns='screen -A -m -d -S'
 	alias rs='screen -rx'
 fi
-
-extract () {
-	if [ -f $1 ] ; then
-		case $1 in
-			*.tar.bz2)   tar xjf $1        ;;
-			*.tar.gz)    tar xzf $1     ;;
-			*.bz2)       bunzip2 $1       ;;
-			*.rar)       rar x $1     ;;
-			*.gz)        gunzip $1     ;;
-			*.tar)       tar xf $1        ;;
-			*.tbz2)      tar xjf $1      ;;
-			*.tgz)       tar xzf $1       ;;
-			*.zip)       unzip $1     ;;
-			*.Z)         uncompress $1  ;;
-			*.7z)        7z x $1    ;;
-			*)           echo "'$1' cannot be extracted via extract()" ;;
-		esac
-	else
-		echo "'$1' is not a valid file"
-	fi
-}
