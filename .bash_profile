@@ -54,7 +54,7 @@ if [ ! -f ~/.bash_nointro ]; then
 	if [ $distro == 'Arch' ] || [ -f ~/.bash_longintro ]; then
 
 		echo -e "\E[1;4;34mProcessor:\E[m"
-		echo "${cpucount}x $cpuname"
+		echo "${cpucount}x$cpuname"
 		if command_exists iostat ; then
 			iostat -c|grep -v Linux
 		fi
@@ -72,6 +72,7 @@ if [ ! -f ~/.bash_nointro ]; then
 		grep -v 'lo\|sit' /proc/net/dev | awk ' { print $1 }' | grep --color=none '[0-9]*:' | while read line
 		do
 			ifconfig $line: | grep --color=none 'HWaddr\|inet addr'
+			echo
 		done
 
 		echo -e "\E[1;4;34mRoutes:\E[m"
