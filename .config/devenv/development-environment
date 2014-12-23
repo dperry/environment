@@ -1,0 +1,5 @@
+export SOFTWARE="/home/dperry/Software"
+export JAVA_HOME="$SOFTWARE/jdk7"
+export M2_HOME="$SOFTWARE/apache-maven"
+export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin
+export DOCKER_HOST=tcp://localhost:4243
